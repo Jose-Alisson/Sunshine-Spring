@@ -8,6 +8,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +22,7 @@ import br.com.sunshine.filter.AccountFilter;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecrityConfiguration {
+public class WebSecurityConfiguration {
 
 	@Autowired
 	private AccountFilter filter;
@@ -32,13 +33,13 @@ public class WebSecrityConfiguration {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-		http.cors(cors -> cors.disable()).csrf(csrf -> csrf.disable()).authorizeHttpRequests(request -> {
-			request.requestMatchers("/api/auth/**").permitAll();
-			request.anyRequest().permitAll();
+		http.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(request -> {
+			request.requestMatchers("/api/account/create").permitAll();
+			request.requestMatchers("/api/account/login").permitAll();
+			request.anyRequest().authenticated();
 
 		}).addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class).sessionManagement(sManager -> {
 			sManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			;
 		});
 
 		return http.build();

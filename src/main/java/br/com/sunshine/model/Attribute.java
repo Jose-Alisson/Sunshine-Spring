@@ -4,13 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductAttribute {
+public class Attribute {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -48,14 +42,12 @@ public class ProductAttribute {
 	
 	@Column(name = "available")
 	private int available;
-	
-	/* relacionamento */
-	
+
 	@JsonIgnore
 	@ManyToMany(mappedBy = "productAttributes")
 	private List<Amount> amount;
 	
-	@JsonIgnore
-	@ManyToMany(mappedBy = "productAttributes")
-	private List<Product> product;
+	@JoinColumn(name = "product_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	private Product product;
 }

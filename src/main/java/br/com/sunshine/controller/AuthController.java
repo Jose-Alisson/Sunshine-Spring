@@ -32,7 +32,7 @@ public class AuthController {
 	@Autowired
 	private TokenService tokenService;
 	
-	@PostMapping("/login")
+	/*@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody Account account_){
 		try {
 			// automatic login
@@ -72,5 +72,5 @@ public class AuthController {
 		} catch (TokenExpiredException ex) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token JWT já expirado");
 		}
-	}
+	}*/
 }

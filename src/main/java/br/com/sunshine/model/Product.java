@@ -1,18 +1,11 @@
 package br.com.sunshine.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,12 +13,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "product")
+@Table(name = "products")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Product {
+public class Product implements Serializable {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -33,32 +26,37 @@ public class Product {
 	
 	@Column(name = "photo_url")
 	private String photoUrl;
-	
+
+	@NotBlank(message = "O nome do produto não pode ser vazio")
+	@NotNull(message = "O nome do produto não pode ser nulo")
 	@Column(name = "product_name")
 	private String productName;
 	
 	@Size(max = 255, message = "A descrição simples não pode ter mais que 255 caracteres")
 	@Column(name = "simple_description")
 	private String description;
-	
+
+	@Size(max = 2000, message = "A Descrição completa não pode ter mais que 2000 caracteres")
 	@Column(name = "all_description", length = 2000)
 	private String allDescription;
 	
 	@Column(name = "base_price")
-	private double basePrice;
-	
-	@Column(name = "category")
+	private double basePrice = 0;
+
+	@NotBlank(message = "A categoria do produto não pode ser vazia")
+	@NotNull(message = "A categoria do produto não pode ser nula")
 	private String category;
-	
-	@Column(name = "available")
+
 	private int available;
-	
-	//@JoinColumn(name = "product_attribute_id")
-	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinTable(name = "product_product_attribute", 
 		joinColumns = @JoinColumn(name = "product_id"), 
 		inverseJoinColumns = @JoinColumn(name = "attribute_id")
 	)
-	private List<ProductAttribute> productAttributes;
-	
+	private List<ProductAttribute> attributes;
+
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "establishment_id", nullable = false)
+	private Establishment establishment;
 }

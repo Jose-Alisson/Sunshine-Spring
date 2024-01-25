@@ -1,11 +1,8 @@
 package br.com.sunshine.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import br.com.sunshine.services.ProductService;
+import br.com.sunshine.dto.EstablishmentDTO;
+import br.com.sunshine.model.Establishment;
+import br.com.sunshine.services.EstablishmentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,19 +11,25 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import br.com.sunshine.model.Product;
-import br.com.sunshine.repository.ProductRepository;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-@RequestMapping("/api/product")
 @RestController
-public class ProductController {
+@RequestMapping("/api/establishment")
+public class EstablishmentController {
 
     @Autowired
-    private ProductService service;
+    private EstablishmentService service;
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody @Valid Product product){
-        return ResponseEntity.ok(service.create(product));
+    public ResponseEntity<?> create(@RequestBody @Valid Establishment establishment){
+        return ResponseEntity.ok(service.create(establishment));
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> update(@RequestBody @Valid EstablishmentDTO dto){
+        return ResponseEntity.ok(service.update(dto));
     }
 
     @DeleteMapping("/delete/{id}")
@@ -35,14 +38,9 @@ public class ProductController {
         return ResponseEntity.ok("Successful");
     }
 
-    @GetMapping("/establishment/{id}/{offset}")
-    public ResponseEntity<?> getByOffSet(@PathVariable("id") String id, @PathVariable("offset") int number){
-        return ResponseEntity.ok(service.getByOffSet(id, number));
-    }
-
-    @GetMapping("/size/establishment/{id}")
-    public  ResponseEntity<?> getSIze(@PathVariable("id") String id){
-        return ResponseEntity.ok(service.getSizeByEstablishment(id));
+    @GetMapping("/name/{name}")
+    public ResponseEntity<?> getByName(@PathVariable("name") String name){
+        return ResponseEntity.ok(service.getByName(name));
     }
 
     @ExceptionHandler(BindException.class)

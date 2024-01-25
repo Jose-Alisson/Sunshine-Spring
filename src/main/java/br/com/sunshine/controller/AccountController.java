@@ -1,18 +1,25 @@
 package br.com.sunshine.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import br.com.sunshine.detail.AccountDetail;
+import br.com.sunshine.dto.AccountDTO;
+import br.com.sunshine.jwt.TokenService;
+import br.com.sunshine.services.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
 
 import br.com.sunshine.model.Account;
 import br.com.sunshine.repository.AccountRepository;
@@ -22,46 +29,66 @@ import br.com.sunshine.repository.AccountRepository;
 public class AccountController {
 
 	@Autowired
-	private AccountRepository repository;
+	private AccountService service;
 
-	public BCryptPasswordEncoder getPasswordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-	
-	@PostMapping("/save")
-	public ResponseEntity<Account> save(@RequestBody Account account) {
-		account.setPassword(getPasswordEncoder().encode(account.getPassword()));
-		return ResponseEntity.ok(repository.save (account));
-	}
+	@Autowired
+	private TokenService tokenService;
 
-	@PutMapping("/update/{id}")
-	public ResponseEntity<Account> update(@PathVariable("id") String id, @RequestBody Account account) {
+	@Autowired
+	private AuthenticationManager authenticationManager;
 
-		Optional<Account> accountOpt = repository.findById(id);
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestParam("email") String email, @RequestParam("password") String password) {
+		var authToken = new UsernamePasswordAuthenticationToken(email, password);
+		Authentication auth = authenticationManager.authenticate(authToken);
+		var response = ((AccountDetail) auth.getPrincipal()).getAccount();
 
-		if (accountOpt.isPresent()) {
-			Account account_ = Account.builder().
-					name(account.getName()).
-					phone(account.getPhone()).
-					password(account.getPassword()).
-					photoUrl(account.getPhotoUrl()).
-					build();
-			
-			return ResponseEntity.ok(repository.save(account_));
-		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		if(response.isPresent()){
+			return ResponseEntity.ok(tokenService.generateToken(response.get()));
 		}
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	}
+
+	@PostMapping("/create")
+	public ResponseEntity<AccountDTO> save(@RequestBody @Valid Account account) {
+		return ResponseEntity.ok(service.save(account));
+	}
+
+	@PutMapping("/update")
+	public ResponseEntity<AccountDTO> update(@RequestBody @Valid AccountDTO account) {
+		return ResponseEntity.ok(service.update(account));
 	}
 	
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<String> delete(@PathVariable("id") String id){
-		Optional<Account> accountOpt = repository.findById(id);
-		
-		if (accountOpt.isPresent()) {
-			repository.delete(accountOpt.get());
-			return ResponseEntity.ok("");
-		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		service.deleteAccount(id);
+		return ResponseEntity.ok("Successful");
+	}
+
+	@GetMapping("/byToken")
+	public ResponseEntity<AccountDTO> getByToken(@RequestParam("token") String token){
+		var email = tokenService.getSubject(token);
+		return ResponseEntity.ok(service.getByEmail(email));
+	}
+
+	@GetMapping("/")
+	public ResponseEntity<List<Account>> getAll(){
+		return ResponseEntity.ok(service.getAll());
+	}
+
+	@ExceptionHandler(BindException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public Map<String, String> handleValidationException(BindException ex) {
+		Map<String, String> errorsMap = new HashMap<>();
+		List<FieldError> errors = ex.getFieldErrors();
+
+		for (FieldError error : errors) {
+			String field = error.getField();
+			String message = error.getDefaultMessage();
+			errorsMap.put(field, message);
 		}
+
+		return errorsMap;
 	}
 }

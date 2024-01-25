@@ -30,7 +30,7 @@ public class AccountFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		
 		String token = "";
-		var autho = request.getHeader("Authorization");
+		var auth_ = request.getHeader("Authorization");
 		
 		/*Enumeration<String> headerNames = request.getHeaderNames();
         if (headerNames != null) {
@@ -42,9 +42,9 @@ public class AccountFilter extends OncePerRequestFilter {
         }*/
 		
 		try {
-			if (autho != null) {
+			if (auth_ != null) {
 				
-				token = autho.replaceAll("Bearer ", "");
+				token = auth_.replaceAll("Bearer ", "");
 				var subject = tokenService.getSubject(token);
 				
 				var auth = new AccountDetail(repository.findByEmail(subject));
@@ -58,7 +58,7 @@ public class AccountFilter extends OncePerRequestFilter {
 				return;
 			}
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 		
 		filterChain.doFilter(request, response);
